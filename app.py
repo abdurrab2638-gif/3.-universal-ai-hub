@@ -1,24 +1,28 @@
-import os
 from google import genai
 import streamlit as st
 
 # 1. Website Page Setup
 st.set_page_config(
-    page_title="Universal AI Hub",
+    page_title="Universal AI Hub Pro",
     page_icon="🚀",
     layout="centered",
 )
 
-# 2. API Key Setup (Laptop aur Internet dono par chalne wala safe system)
-try:
-    API_KEY = st.secrets["GEMINI_API_KEY"]
-except Exception:
-    API_KEY = "YAHAN_APNI_ASAL_API_KEY_PASTE_KAREIN"
-
+# 2. API Key & Earning Settings (Apni details yahan set karein)
+API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
+YOUR_WHATSAPP = "+92-340-1504999"  # Yahan apna WhatsApp number likhein
+VIP_PASSCODE = "PRO2027"  # Ye code aap payment karne wale users ko dein ge
 
-# 3. AI Response Function (4-Model Auto-Fallback ke saath)
+# Free Usage Counter (Har user ko 3 free checks milenge)
+if "usage_count" not in st.session_state:
+    st.session_state.usage_count = 0
+if "is_vip" not in st.session_state:
+    st.session_state.is_vip = False
+
+
+# 3. AI Response Function (4-Model Auto-Fallback)
 def get_ai_response(prompt_text):
     models_list = [
         "gemini-3.5-flash",
@@ -38,95 +42,97 @@ def get_ai_response(prompt_text):
     return None, None
 
 
-# 4. Sidebar Menu (Universal Tools Selection)
-st.sidebar.title("🚀 Universal AI Tools")
-st.sidebar.write("Apni pasand ka AI tool chunein:")
+# 4. Sidebar: Language, Tools & VIP Unlock
+st.sidebar.title("🚀 Universal AI Hub")
+
+lang = st.sidebar.selectbox(
+    "🌍 Select Language / Zuban:",
+    ["English (Global)", "Roman Urdu + English"],
+)
+
 tool_choice = st.sidebar.radio(
-    "Select Tool:",
+    "🛠️ Choose AI Tool:",
     [
         "🛡️ Scam & Fraud Detector",
         "📄 CV & Cover Letter Maker",
         "✍️ Email & Application Writer",
-        "🎓 Easy Study & Concept Tutor",
+        "🎓 Study & Concept Tutor",
+        "💼 VIP: Fiverr/Upwork Proposal Writer",
+        "🎬 VIP: YouTube & TikTok Script Maker",
     ],
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info(
-    "💡 Tip: Har jawab ko neeche diye gaye button se download bhi kiya ja sakta hai."
-)
+st.sidebar.subheader("💎 Unlock Unlimited VIP Access")
+if not st.session_state.is_vip:
+    st.sidebar.write(
+        f"Free Uses Left: **{max(0, 3 - st.session_state.usage_count)} / 3**"
+    )
+    entered_code = st.sidebar.text_input(
+        "Enter VIP Passcode:", type="password"
+    )
+    if st.sidebar.button("Activate VIP 🔓"):
+        if entered_code == VIP_PASSCODE:
+            st.session_state.is_vip = True
+            st.sidebar.success("🎉 VIP Unlocked! Enjoy Unlimited Access.")
+            st.rerun()
+        else:
+            st.sidebar.error("Invalid Code!")
+    st.sidebar.info(
+        f"💳 **Get VIP Code (Rs. 300/month):**\nSend payment via JazzCash/EasyPaisa & message on WhatsApp: **{YOUR_WHATSAPP}**"
+    )
+else:
+    st.sidebar.success("✅ VIP Member Active (Unlimited)")
 
-# 5. Main Screen Interface
+# 5. Main Interface
 st.title(f"{tool_choice}")
 
-if tool_choice == "🛡️ Scam & Fraud Detector":
-    st.write(
-        "Koi bhi mashkook message, email, ya link paste karein aur check karein ke ye Safe hai ya Fraud."
-    )
-    user_input = st.text_area("Message yahan paste karein:", height=150)
-    final_prompt = f"""
-    Tum ek expert cybersecurity aur scam detector AI ho. Neeche diye gaye message ko check karo aur aasan Roman Urdu aur English mein batao:
-    1. Kya ye message SAFE hai ya SCAM/FRAUD?
-    2. Wajah kya hai?
-    3. User ko ab kya karna chahiye?
-    Message: {user_input}
-    """
+lang_instruction = (
+    "Respond strictly in clear, professional English."
+    if lang == "English (Global)"
+    else "Respond clearly in easy Roman Urdu along with English."
+)
 
-elif tool_choice == "📄 CV & Cover Letter Maker":
-    st.write(
-        "Apni details likhein aur aik professional Job CV summary aur Cover Letter tayyar karein."
+is_vip_tool = "VIP:" in tool_choice
+
+if is_vip_tool and not st.session_state.is_vip:
+    st.warning(
+        "🔒 This is a **VIP Pro Tool**! Enter your VIP Passcode in the left sidebar to unlock it."
     )
+elif not st.session_state.is_vip and st.session_state.usage_count >= 3:
+    st.error(
+        f"⏳ Your 3 free trials are complete! Contact WhatsApp **{YOUR_WHATSAPP}** to get your VIP Passcode for unlimited access."
+    )
+else:
     user_input = st.text_area(
-        "Apna naam, taleem (education), skills, aur kis job ke liye apply kar rahe hain likhein:",
-        height=150,
+        "Enter your details, message, or topic below:", height=150
     )
-    final_prompt = f"""
-    Tum ek professional HR aur Career Expert ho. Neeche di gayi details ki bunyad par English mein aik zabardast Professional CV Summary aur aik impressive Cover Letter likho:
-    Details: {user_input}
-    """
 
-elif tool_choice == "✍️ Email & Application Writer":
-    st.write(
-        "School, college, office, ya freelancing client ke liye fori professional email ya darkhwast likhwayein."
-    )
-    user_input = st.text_area(
-        "Kis maqsad ke liye email ya application likhni hai? (Mukhtasir details likhein):",
-        height=150,
-    )
-    final_prompt = f"""
-    Tum ek expert communication writer ho. Neeche diye gaye maqsad ke liye aik professional, saaf aur asar-dar Email / Application likho:
-    Maqsad: {user_input}
-    """
+    prompts = {
+        "🛡️ Scam & Fraud Detector": f"You are a cybersecurity expert. Analyze this message/link for scams or phishing. Tell if it is SAFE or SCAM, why, and what the user should do. {lang_instruction} Message: {user_input}",
+        "📄 CV & Cover Letter Maker": f"You are an expert HR recruiter. Write a high-converting Professional CV Summary and Cover Letter based on these details. {lang_instruction} Details: {user_input}",
+        "✍️ Email & Application Writer": f"You are a professional communication specialist. Write a formal, clear, and effective email or application for this purpose. {lang_instruction} Purpose: {user_input}",
+        "🎓 Study & Concept Tutor": f"You are an expert teacher. Explain this topic step-by-step with simple real-world examples. {lang_instruction} Topic: {user_input}",
+        "💼 VIP: Fiverr/Upwork Proposal Writer": f"You are a top-rated freelancer. Write a winning, client-focused Fiverr/Upwork job proposal that gets replies. {lang_instruction} Job Details: {user_input}",
+        "🎬 VIP: YouTube & TikTok Script Maker": f"You are a viral content creator. Write an engaging video script with a strong hook, main points, and call-to-action. {lang_instruction} Video Topic: {user_input}",
+    }
 
-elif tool_choice == "🎓 Easy Study & Concept Tutor":
-    st.write(
-        "Koi bhi mushkil sawal, coding concept, ya topic likhein—AI aasan misalon ke saath samjhayega."
-    )
-    user_input = st.text_area(
-        "Apna sawal ya topic yahan likhein:", height=150
-    )
-    final_prompt = f"""
-    Tum ek behtareen ustaad (Teacher) ho. Neeche diye gaye topic ko aasan Roman Urdu aur English mein step-by-step aur rozmarra ki misalon ke saath samjhao:
-    Topic: {user_input}
-    """
-
-# 6. Action Button & Result
-if st.button("Generate Karein ✨"):
-    if user_input.strip() == "":
-        st.warning("Pehle neeche wale box mein kuch likhein!")
-    else:
-        with st.spinner("AI aapke liye kaam kar raha hai..."):
-            result, used_engine = get_ai_response(final_prompt)
-            if result:
-                st.success(f"Kaam Mukammal! (Engine: {used_engine})")
-                st.markdown(result)
-                st.download_button(
-                    label="📥 Jawab Download Karein (.txt)",
-                    data=result,
-                    file_name="Universal_AI_Result.txt",
-                    mime="text/plain",
-                )
-            else:
-                st.error(
-                    "⚠️ Is waqt server busy hai, 5 second baad dobara try karein."
-                )
+    if st.button("Generate Now ✨"):
+        if user_input.strip() == "":
+            st.warning("Please enter something in the box first!")
+        else:
+            with st.spinner("AI is working on your request..."):
+                result, used_engine = get_ai_response(prompts[tool_choice])
+                if result:
+                    if not st.session_state.is_vip:
+                        st.session_state.usage_count += 1
+                    st.success(f"Completed! (Engine: {used_engine})")
+                    st.markdown(result)
+                    st.download_button(
+                        label="📥 Download Result (.txt)",
+                        data=result,
+                        file_name="AI_Pro_Result.txt",
+                        mime="text/plain",
+                    )
+                else:
+                    st.error("Server is busy right now. Please try again in 5 seconds.")

@@ -272,7 +272,10 @@ else:
             else:
                 with st.spinner("Generating..."):
                     res, eng = get_ai_response(prompts[tool_choice])
-                    if res:if not st.session_state.is_vip:
-st.session_state.usage_count += 1
-st.markdown(res)
-st.download_button("📥 Download", res, "Result.txt")
+                    if res:
+                                         if res:
+                     if not st.session_state.is_vip:
+                         st.session_state.usage_count += 1
+                     st.markdown(res)
+                     st.download_button("📥 Download", res, "Result.txt")
+

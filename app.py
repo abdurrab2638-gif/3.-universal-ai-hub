@@ -26,7 +26,7 @@ BANK = "2697-0115726042 (Meezan Bank)"
 PRICE = "Rs. 300/Month"
 
 VIP_USERS = {
-    "admin@gmail.com": "ADMIN2026",
+    "abdurrab2638@gmail.com": "ADMIN2026",
     "ali@gmail.com": "VIP101",
 }
 

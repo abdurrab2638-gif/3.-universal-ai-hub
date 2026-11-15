@@ -242,27 +242,7 @@ else:
         if st.button("Analyze PDF ✨"):
             if not up_pdf:
                 st.warning("Upload PDF!")
-            else:
-                with st.spinner("Reading PDF..."):
-                    reader = PdfReader(up_pdf)
-                    text = "".join(
-                        [p.extract_text() or "" for p in reader.pages[:10]]
-                    )
-                    q = pdf_q if pdf_q.strip() else "Summarize this document."
-                    res, eng = get_ai_response(
-                        f"{q} {lang_inst}\n\n{text[:15000]}"
-                    )
-                    if res:
-                        st.markdown(res)
-                        st.download_button(
-                            "📥 Download", res, "PDF_Summary.txt"
-                        )
-
-    else:
-        u_in = st.text_area("Enter text or topic:", height=150)
-        prompts = {
-            "🛡️ Scam & Fraud Detector": f"Check if SAFE or SCAM and explain why. {lang_inst} Message: {u_in}",
-            "📄 CV & Cover Letter Maker": f"Write a CV Summary and Cover Letter. {lang_inst} Details: {u_in}",
+            er. {lang_inst} Details: {u_in}",
             "✍️ Email & Application Writer": f"Write a formal email or application. {lang_inst} Purpose: {u_in}",
             "🎓 Study & Concept Tutor": f"Explain this topic simply. {lang_inst} Topic: {u_in}",
         }
@@ -278,4 +258,27 @@ else:
                          st.session_state.usage_count += 1
                      st.markdown(res)
                      st.download_button("📥 Download", res, "Result.txt")
+
+
+
+        else:
+        u_in = st.text_area("Enter text or topic:", height=150)
+        prompts = {
+            "🛡️ Scam & Fraud Detector": f"Check if SAFE or SCAM and explain why. {lang_inst} Message: {u_in}",
+            "📄 CV & Cover Letter Maker": f"Write a CV Summary and Cover Letter. {lang_inst} Details: {u_in}",
+            "✍️ Email & Application Writer": f"Write a formal email or application. {lang_inst} Purpose: {u_in}",
+            "🎓 Study & Concept Tutor": f"Explain this topic simply. {lang_inst} Topic: {u_in}",
+        }
+        if st.button("Generate ✨"):
+            if not u_in.strip():
+                st.warning("Enter text first!")
+            else:
+                with st.spinner("Generating..."):
+                    res, eng = get_ai_response(prompts[tool_choice])
+                    if res:
+                        if not st.session_state.is_vip:
+                            st.session_state.usage_count += 1
+                        st.markdown(res)
+                        st.download_button("📥 Download", res, "Result.txt")
+
 

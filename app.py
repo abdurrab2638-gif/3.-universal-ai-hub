@@ -147,7 +147,7 @@ if st.session_state.email == "":
     st.stop()
 
 st.title("🚀 Universal AI Studio Pro")
-c_u, c_l = st.columns()
+c_u, c_l = st.columns(2)
 with c_u:
     if st.session_state.vip:
         st.success(f"💎 VIP: {st.session_state.email}")

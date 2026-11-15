@@ -249,5 +249,5 @@ else:
                         if not st.session_state.is_vip:
                             st.session_state.usage_count += 1
                         st.markdown(res)
-                        st.download_button("📥 Download", res, "Result.txt")
+                        st.download_button("📥 Download", res, "Result.txt") 
 

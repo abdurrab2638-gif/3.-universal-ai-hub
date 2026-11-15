@@ -9,13 +9,11 @@ st.set_page_config(
     page_title="Universal AI Hub Pro", page_icon="🚀", layout="centered"
 )
 
-# GitHub aur Menu Chupane ka Code
+# Sirf footer aur deploy button chupayein (Menu ko chupane se sidebar gayab ho jata hai)
 st.markdown(
     """
 <style>
-#MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-header {visibility: hidden;}
 .stDeployButton {display:none;}
 </style>
 """,
@@ -24,7 +22,7 @@ header {visibility: hidden;}
 
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
-YOUR_WHATSAPP = "+92-340-1504999"
+YOUR_WHATSAPP = "+92-3401504999"  # Yahan apna WhatsApp number likhein
 
 VIP_USERS = {
     "admin@gmail.com": "ADMIN2026",
@@ -91,11 +89,14 @@ def create_ai_video(script_lines):
     return temp_file.name
 
 
+# 1. Email Login Screen
 if st.session_state.user_email == "":
     st.title("🚀 Welcome to Universal AI Hub Pro")
+    st.write("Apne Email se login karein aur saare AI Tools istemal karein:")
     email_input = st.text_input("Enter your Email Address:")
     vip_code_input = st.text_input(
-        "VIP Passcode (Optional):", type="password"
+        "VIP Passcode (Optional - Free users khali chhor dein):",
+        type="password",
     )
     if st.button("Login / Start Free ✨"):
         clean_email = email_input.strip().lower()
@@ -111,38 +112,46 @@ if st.session_state.user_email == "":
             st.rerun()
     st.stop()
 
-st.sidebar.title("🚀 Universal AI Hub")
-st.sidebar.write(f"👤 **{st.session_state.user_email}**")
-if st.session_state.is_vip:
-    st.sidebar.success("💎 VIP Member Active")
-else:
-    st.sidebar.warning(
-        f"Free Uses: **{max(0, 3 - st.session_state.usage_count)} / 3**"
+# 2. Top Header Bar (Har mobile aur laptop par saaf nazar aayega)
+st.title("🚀 Universal AI Hub Pro")
+col1, col2 = st.columns([3, 1])
+with col1:
+    if st.session_state.is_vip:
+        st.success(f"💎 VIP Active: {st.session_state.user_email}")
+    else:
+        st.info(
+            f"👤 {st.session_state.user_email} | Free Uses Left: {max(0, 3 - st.session_state.usage_count)} / 3"
+        )
+with col2:
+    if st.button("Logout 🚪"):
+        st.session_state.user_email = ""
+        st.session_state.is_vip = False
+        st.rerun()
+
+# 3. Main Page Tool & Language Selector (Ab koi cheez nahi chupegi!)
+c1, c2 = st.columns(2)
+with c1:
+    tool_choice = st.selectbox(
+        "🛠️ Select AI Tool (Yahan se Tool Chunein):",
+        [
+            "🛡️ Scam & Fraud Detector",
+            "🖼️ AI Image Vision & Analyzer",
+            "📄 CV & Cover Letter Maker",
+            "✍️ Email & Application Writer",
+            "🎓 Study & Concept Tutor",
+            "📚 VIP: PDF Document Reader",
+            "🎬 VIP: AI Video Maker (.mp4)",
+        ],
     )
-    st.sidebar.info(f"VIP Code WhatsApp: **{YOUR_WHATSAPP}**")
+with c2:
+    lang = st.selectbox(
+        "🌍 Select Language:",
+        ["English (Global)", "Roman Urdu + English"],
+    )
 
-if st.sidebar.button("Logout 🚪"):
-    st.session_state.user_email = ""
-    st.session_state.is_vip = False
-    st.rerun()
+st.markdown("---")
+st.subheader(f"{tool_choice}")
 
-lang = st.sidebar.selectbox(
-    "🌍 Language:", ["English (Global)", "Roman Urdu + English"]
-)
-tool_choice = st.sidebar.radio(
-    "🛠️ Choose Tool:",
-    [
-        "🛡️ Scam & Fraud Detector",
-        "🖼️ AI Image Vision & Analyzer",
-        "📄 CV & Cover Letter Maker",
-        "✍️ Email & Application Writer",
-        "🎓 Study & Concept Tutor",
-        "📚 VIP: PDF Document Reader",
-        "🎬 VIP: AI Video Maker (.mp4)",
-    ],
-)
-
-st.title(f"{tool_choice}")
 lang_instruction = (
     "Respond strictly in clear English."
     if lang == "English (Global)"
@@ -152,11 +161,11 @@ is_vip_tool = "VIP:" in tool_choice
 
 if is_vip_tool and not st.session_state.is_vip:
     st.warning(
-        f"🔒 VIP Tool! WhatsApp **{YOUR_WHATSAPP}** with your email ({st.session_state.user_email}) to unlock."
+        f"🔒 Ye VIP Tool hai! Apna Email ({st.session_state.user_email}) WhatsApp **{YOUR_WHATSAPP}** par bhej kar apna personal VIP code hasil karein."
     )
 elif not st.session_state.is_vip and st.session_state.usage_count >= 3:
     st.error(
-        f"⏳ Free limit reached! Contact WhatsApp **{YOUR_WHATSAPP}** for VIP access."
+        f"⏳ Aapke 3 free trials khatam ho gaye hain! Unlimited access ke liye WhatsApp **{YOUR_WHATSAPP}** par rabta karein."
     )
 else:
     if tool_choice == "🖼️ AI Image Vision & Analyzer":
@@ -249,5 +258,4 @@ else:
                         if not st.session_state.is_vip:
                             st.session_state.usage_count += 1
                         st.markdown(res)
-                        st.download_button("📥 Download", res, "Result.txt") 
-
+                        st.download_button("📥 Download", res, "Result.txt")

@@ -292,68 +292,6 @@ else:
                     SCRIPT:
                     res = ask_ai(seo_prompt)
 if res:
-parts = res.split("SEO:")
-script_part = (
-parts.replace("SCRIPT:", "").strip()
-)
-seo_part = parts[1].strip() if len(parts) > 1 else ""
-# Agar Veo free tier par available nahi tha toh Custom Image + Voice Studio video banayein
-if not veo_done:
-add_v = "Yes" in v_voice
-vp = build_pro_video(
-script_part.split("\n"),
-up_imgs,
-v_size,
-v_qual,
-add_v,
-"en",
-)
-if vp:
-st.success(
-f"🎉 Aapki {v_size} ({v_qual}) Video Tayyar Hai!"
-)
-st.video(vp)
-with open(vp, "rb") as vf:
-st.download_button(
-"📥 Download MP4 Video",
-vf,
-"AI_Studio_Video.mp4",
-"video/mp4",
-)
-if seo_part:
-st.subheader("📝 Viral Title, Description & Tags")
-st.markdown(seo_part)
-st.download_button(
-"📥 Download Title & Description",
-seo_part,
-"Video_SEO.txt",
-)
-elif tool == "🖼️ Image Analyzer":
-img = st.file_uploader("Upload Image:", type=["png", "jpg", "jpeg"])
-iq = st.text_input("Question:")
-if img:
-st.image(img, width=250)
-if st.button("Analyze 🔍") and img:
-with st.spinner("Working..."):
-q = iq if iq.strip() else "Describe this image."
-res = ask_ai(f"{q} {l_inst}", Image.open(img))
-if res:
-st.session_state.count += 1
-st.markdown(res)
-st.download_button("📥 Download", res, "Image.txt")
-elif tool == "📚 VIP: PDF Reader":
-pdf = st.file_uploader("Upload PDF:", type=["pdf"])
-pq = st.text_input("Question:")
-if st.button("Read PDF ✨") and pdf:
-with st.spinner("Reading..."):
-rdr = PdfReader(pdf)
-txt = "".join([p.extract_text() or "" for p in rdr.pages[:8]])
-q = pq if pq.strip() else "Summarize this PDF."
-res = ask_ai(f"{q} {l_inst}\n\n{txt[:12000]}")
-if res:
-st.markdown(res)
-st.download_button("📥 Download", res, "PDF.txt")
-else:
 uin = st.text_area("Enter text:", height=130)
 if st.button("Generate ✨") and uin.strip():
 with st.spinner("Generating..."):

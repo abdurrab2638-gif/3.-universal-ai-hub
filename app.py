@@ -22,8 +22,8 @@ BANK = "2697-0115726042"
 PRICE = "Rs. 300/Month"
 
 VIP_USERS = {
-    "admin@gmail.com": "ADMIN2026",
-    "ali@gmail.com": "VIP101",
+    "abdurrab2638@gmail.com": "ADMIN2026",
+    "..@gmail.com": "VIP101",
 }
 
 for k, v in [("email", ""), ("count", 0), ("vip", False)]:

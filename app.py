@@ -1,11 +1,16 @@
+import os
 import tempfile
+import time
 from google import genai
-from moviepy import ColorClip, CompositeVideoClip, TextClip
+from google.genai import types
+from gtts import gTTS
+from moviepy import AudioFileClip, ColorClip, CompositeVideoClip, ImageClip, TextClip
+import numpy as np
 from PIL import Image
 from pypdf import PdfReader
 import streamlit as st
 
-st.set_page_config(page_title="Universal AI Hub", page_icon="🚀")
+st.set_page_config(page_title="Universal AI Studio Pro", page_icon="🚀")
 st.markdown(
     "<style>footer{visibility:hidden}.stDeployButton{display:none}</style>",
     unsafe_allow_html=True,
@@ -22,8 +27,8 @@ BANK = "2697-0115726042"
 PRICE = "Rs. 300/Month"
 
 VIP_USERS = {
-    "abdurrab2638@gmail.com": "ADMIN2026",
-    "..@gmail.com": "VIP101",
+    "abdurrab2638@gmail.om": "ADMIN2026",
+    "@gmail.com": "VIP101",
 }
 
 for k, v in [("email", ""), ("count", 0), ("vip", False)]:
@@ -43,34 +48,95 @@ def ask_ai(prompt, img=None):
     return None
 
 
-def make_video(lines):
+def build_pro_video(
+    lines, user_images, aspect_ratio, quality, add_voice, lang_code
+):
+    # Video Size & Quality Setup
+    if "TikTok" in aspect_ratio:
+        w, h = (
+            (1080, 1920)
+            if "1080p" in quality
+            else ((720, 1280) if "720p" in quality else (480, 854))
+        )
+    else:
+        w, h = (
+            (1920, 1080)
+            if "1080p" in quality
+            else ((1280, 720) if "720p" in quality else (854, 480))
+        )
+
     clips = []
-    for l in lines[:5]:
-        txt_str = l.strip()[:100]
+    full_script = ""
+    current_time = 0
+
+    for i, line in enumerate(lines[:5]):
+        txt_str = line.strip()[:110]
         if not txt_str:
             continue
-        bg = ColorClip(size=(720, 1280), color=(20, 25, 45), duration=3)
+        full_script += txt_str + ". "
+        dur = 4
+
+        # Agar user ne images upload ki hain toh unhein background mein lagayein
+        if user_images and len(user_images) > 0:
+            pil_im = Image.open(user_images[i % len(user_images)]).convert(
+                "RGB"
+            )
+            pil_im = pil_im.resize((w, h))
+            bg = ImageClip(np.array(pil_im)).with_duration(dur)
+        else:
+            colors = [(15, 23, 42), (30, 27, 75), (20, 40, 60), (45, 20, 50)]
+            bg = ColorClip(
+                size=(w, h), color=colors[i % len(colors)], duration=dur
+            )
+
+        font_sz = int(w * 0.045)
         tc = TextClip(
             text=txt_str,
-            font_size=40,
+            font_size=font_sz,
             color="white",
-            size=(600, None),
+            bg_color="black",
+            size=(int(w * 0.85), None),
             method="caption",
         )
-        tc = tc.with_position("center").with_duration(3)
-        clips.append(CompositeVideoClip([bg, tc]))
+        tc = tc.with_position(("center", int(h * 0.72))).with_duration(dur)
+
+        scene = CompositeVideoClip([bg, tc]).with_start(current_time)
+        clips.append(scene)
+        current_time += dur
+
     if not clips:
         return None
-    vid = CompositeVideoClip([c.with_start(i * 3) for i, c in enumerate(clips)])
-    f = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-    vid.write_videofile(
-        f.name, fps=24, codec="libx264", audio=False, logger=None
+
+    final_vid = CompositeVideoClip(clips)
+
+    # AI Voice-Over Add Karna
+    audio_path = None
+    if add_voice and full_script.strip():
+        try:
+            tts = gTTS(text=full_script, lang=lang_code, slow=False)
+            af = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+            tts.save(af.name)
+            audio_path = af.name
+            aclip = AudioFileClip(audio_path)
+            if aclip.duration > final_vid.duration:
+                final_vid = final_vid.with_duration(aclip.duration)
+            final_vid = final_vid.with_audio(aclip)
+        except Exception:
+            pass
+
+    out_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    final_vid.write_videofile(
+        out_file.name,
+        fps=24,
+        codec="libx264",
+        audio_codec="aac" if audio_path else None,
+        logger=None,
     )
-    return f.name
+    return out_file.name
 
 
 if st.session_state.email == "":
-    st.title("🚀 Universal AI Hub Pro")
+    st.title("🚀 Universal AI Studio Pro")
     em = st.text_input("Enter Email:")
     cd = st.text_input("VIP Code (Optional):", type="password")
     if st.button("Login / Start ✨"):
@@ -84,8 +150,8 @@ if st.session_state.email == "":
             st.rerun()
     st.stop()
 
-st.title("🚀 Universal AI Hub Pro")
-c_u, c_l = st.columns([3, 1])
+st.title("🚀 Universal AI Studio Pro")
+c_u, c_l = st.columns()
 with c_u:
     if st.session_state.vip:
         st.success(f"💎 VIP: {st.session_state.email}")
@@ -125,13 +191,13 @@ with t1:
     tool = st.selectbox(
         "🛠️ Select Tool:",
         [
+            "🎬 VIP: Pro AI Video Studio",
             "🛡️ Scam Detector",
             "🖼️ Image Analyzer",
             "📄 CV & Cover Letter",
             "✍️ Email Writer",
             "🎓 Study Tutor",
             "📚 VIP: PDF Reader",
-            "🎬 VIP: Video Maker",
         ],
     )
 with t2:
@@ -149,55 +215,78 @@ if "VIP:" in tool and not st.session_state.vip:
 elif not st.session_state.vip and st.session_state.count >= 3:
     st.error("⏳ Free limit khatam! Upar Wallets se VIP code lein.")
 else:
-    if tool == "🖼️ Image Analyzer":
-        img = st.file_uploader("Upload Image:", type=["png", "jpg", "jpeg"])
-        iq = st.text_input("Question:")
-        if img:
-            st.image(img, width=250)
-        if st.button("Analyze 🔍") and img:
-            with st.spinner("Working..."):
-                q = iq if iq.strip() else "Describe this image."
-                res = ask_ai(f"{q} {l_inst}", Image.open(img))
-                if res:
-                    st.session_state.count += 1
-                    st.markdown(res)
-                    st.download_button("📥 Download", res, "Image.txt")
+    if tool == "🎬 VIP: Pro AI Video Studio":
+        st.write(
+            "YouTube ya TikTok ke liye Voice-Over, Custom Images, Title aur Description ke saath full video banayein!"
+        )
+        v_topic = st.text_input("1. Video Topic / Idea likhein:")
 
-    elif tool == "🎬 VIP: Video Maker":
-        vt = st.text_input("Video Topic:")
-        if st.button("Create Video 🎥") and vt.strip():
-            with st.spinner("Making MP4..."):
-                p = f"Write 5 short lines (max 8 words each, no numbers) about: {vt}. {l_inst}"
-                res = ask_ai(p)
-                if res:
-                    vp = make_video(res.split("\n"))
-                    if vp:
-                        st.video(vp)
-                        with open(vp, "rb") as vf:
-                            st.download_button(
-                                "📥 Download MP4", vf, "Video.mp4"
-                            )
+        vc1, vc2, vc3 = st.columns(3)
+        with vc1:
+            v_size = st.selectbox(
+                "2. Video Size:",
+                ["TikTok / Shorts (9:16)", "YouTube Video (16:9)"],
+            )
+        with vc2:
+            v_qual = st.selectbox(
+                "3. Video Quality:",
+                ["720p HD", "1080p Full HD", "480p Fast"],
+            )
+        with vc3:
+            v_voice = st.selectbox(
+                "4. AI Voice-Over:", ["Yes (English Voice)", "No Voice"]
+            )
 
-    elif tool == "📚 VIP: PDF Reader":
-        pdf = st.file_uploader("Upload PDF:", type=["pdf"])
-        pq = st.text_input("Question:")
-        if st.button("Read PDF ✨") and pdf:
-            with st.spinner("Reading..."):
-                rdr = PdfReader(pdf)
-                txt = "".join([p.extract_text() or "" for p in rdr.pages[:8]])
-                q = pq if pq.strip() else "Summarize this PDF."
-                res = ask_ai(f"{q} {l_inst}\n\n{txt[:12000]}")
-                if res:
-                    st.markdown(res)
-                    st.download_button("📥 Download", res, "PDF.txt")
+        up_imgs = st.file_uploader(
+            "5. Apni Tasveerein Upload Karein (Optional - Max 5 Images):",
+            type=["png", "jpg", "jpeg"],
+            accept_multiple_files=True,
+        )
 
-    else:
-        uin = st.text_area("Enter text:", height=130)
-        if st.button("Generate ✨") and uin.strip():
-            with st.spinner("Generating..."):
-                p = f"Task: {tool}. {l_inst} Input: {uin}"
-                res = ask_ai(p)
-                if res:
-                    st.session_state.count += 1
-                    st.markdown(res)
-                    st.download_button("📥 Download", res, "Result.txt")
+        if st.button("🎬 Generate Complete Video & SEO ✨"):
+            if not v_topic.strip():
+                st.warning("Pehle Video Topic likhein!")
+            else:
+                with st.spinner(
+                    "AI Video, Voice-Over, Title aur Description tayyar kar raha hai..."
+                ):
+                    # Step A: Pehle Google Veo Model Try Karein (Agar API key par Veo enabled ho)
+                    veo_done = False
+                    try:
+                        op = client.models.generate_videos(
+                            model="veo-2.0-generate-001",
+                            prompt=v_topic,
+                            config=types.GenerateVideosConfig(
+                                aspect_ratio="9:16"
+                                if "TikTok" in v_size
+                                else "16:9"
+                            ),
+                        )
+                        while not op.done:
+                            time.sleep(5)
+                            op = client.operations.get(op)
+                        if op.response and op.response.generated_videos:
+                            vid_obj = op.response.generated_videos
+                            client.files.download(file=vid_obj.video)
+                            vf_path = tempfile.NamedTemporaryFile(
+                                delete=False, suffix=".mp4"
+                            ).name
+                            vid_obj.video.save(vf_path)
+                            st.success("🎉 Cinematic Veo AI Video Tayyar Hai!")
+                            st.video(vf_path)
+                            with open(vf_path, "rb") as f:
+                                st.download_button(
+                                    "📥 Download Veo MP4",
+                                    f,
+                                    "Veo_AI_Video.mp4",
+                                    "video/mp4",
+                                )
+                            veo_done = True
+                    except Exception:
+                        veo_done = False
+
+                    # Step B: Script + Title + Description + Tags Generate Karein
+                    seo_prompt = f"""
+                    Create a video package for topic: {v_topic}. {l_inst}
+                    Format strictly like this:
+                    SCRIPT:

@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="Universal AI Hub Pro", page_icon="🚀", layout="centered"
 )
 
-# Sirf footer aur deploy button chupayein (Menu ko chupane se sidebar gayab ho jata hai)
+# Footer aur Deploy button chupayein
 st.markdown(
     """
 <style>
@@ -22,8 +22,18 @@ footer {visibility: hidden;}
 
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
-YOUR_WHATSAPP = "+92-3401504999"  # Yahan apna WhatsApp number likhein
 
+# ==========================================
+# APNI PAYMENT & WHATSAPP DETAILS YAHAN LIKHEIN
+# ==========================================
+YOUR_WHATSAPP = "923000000000"  # Bina '+' ke likhein (e.g., 923001234567)
+ACCOUNT_TITLE = "Muhammad Ali"  # Apna Account Title likhein
+EASYPAISA_NO = "0300-0000000"
+JAZZCASH_NO = "0300-0000000"
+MEEZAN_BANK = "0101-0101234567 (Meezan Bank)"
+VIP_PRICE = "Rs. 300 / Month"
+
+# Har VIP Customer ka Email aur uska Personal Code
 VIP_USERS = {
     "admin@gmail.com": "ADMIN2026",
     "ali@gmail.com": "VIP101",
@@ -92,16 +102,16 @@ def create_ai_video(script_lines):
 # 1. Email Login Screen
 if st.session_state.user_email == "":
     st.title("🚀 Welcome to Universal AI Hub Pro")
-    st.write("Apne Email se login karein aur saare AI Tools istemal karein:")
+    st.write("Apne Email se login karein aur AI Tools istemal karein:")
     email_input = st.text_input("Enter your Email Address:")
     vip_code_input = st.text_input(
-        "VIP Passcode (Optional - Free users khali chhor dein):",
+        "VIP Passcode (Agar aapke paas code hai toh yahan likhein):",
         type="password",
     )
     if st.button("Login / Start Free ✨"):
         clean_email = email_input.strip().lower()
         if "@" not in clean_email or "." not in clean_email:
-            st.error("Please enter a valid email!")
+            st.error("Please enter a valid email address!")
         else:
             st.session_state.user_email = clean_email
             if (
@@ -112,27 +122,69 @@ if st.session_state.user_email == "":
             st.rerun()
     st.stop()
 
-# 2. Top Header Bar (Har mobile aur laptop par saaf nazar aayega)
+# 2. Top Status Bar & Direct VIP Unlock Box (Bilkul Samne Screen Par)
 st.title("🚀 Universal AI Hub Pro")
-col1, col2 = st.columns([3, 1])
-with col1:
+
+col_user, col_logout = st.columns()
+with col_user:
     if st.session_state.is_vip:
-        st.success(f"💎 VIP Active: {st.session_state.user_email}")
+        st.success(f"💎 VIP Active: **{st.session_state.user_email}**")
     else:
         st.info(
-            f"👤 {st.session_state.user_email} | Free Uses Left: {max(0, 3 - st.session_state.usage_count)} / 3"
+            f"👤 **{st.session_state.user_email}** | Free Trials Left: **{max(0, 3 - st.session_state.usage_count)} / 3**"
         )
-with col2:
+with col_logout:
     if st.button("Logout 🚪"):
         st.session_state.user_email = ""
         st.session_state.is_vip = False
         st.rerun()
 
-# 3. Main Page Tool & Language Selector (Ab koi cheez nahi chupegi!)
+# Agar user abhi VIP nahi hai toh samne VIP Unlock aur Wallets ka Box dikhayein
+if not st.session_state.is_vip:
+    with st.expander(
+        "💎 Unlock Unlimited VIP Access & Payment Wallets (Click Here)",
+        expanded=True,
+    ):
+        v_col1, v_col2 = st.columns(2)
+        with v_col1:
+            st.subheader("🔑 Enter VIP Code")
+            quick_code = st.text_input(
+                "Apna VIP Passcode yahan dalein:",
+                type="password",
+                key="main_vip_box",
+            )
+            if st.button("Activate VIP Now 🔓"):
+                if (
+                    st.session_state.user_email in VIP_USERS
+                    and VIP_USERS[st.session_state.user_email] == quick_code
+                ):
+                    st.session_state.is_vip = True
+                    st.success("🎉 VIP Unlocked! Enjoy Unlimited Access.")
+                    st.rerun()
+                else:
+                    st.error(
+                        "❌ Galat Code! Apne email ke liye code hasil karne ke liye neeche payment karein."
+                    )
+
+        with v_col2:
+            st.subheader(f"💳 Payment Wallets ({VIP_PRICE})")
+            st.markdown(f"""
+            **Account Title:** `{ABDUR RAB}`  
+            🟢 **EasyPaisa:** `{03401504999}`  
+            🔴 **JazzCash:** `{03401504999}`  
+            🏦 **Meezan Bank:** `{26970115726042}`  
+            """)
+            whatsapp_msg = f"Assalam-o-Alaikum! Maine {VIP_PRICE} payment kar di hai. Mera Email: {st.session_state.user_email} hai, please mujhe VIP Code de dein."
+            wa_link = f"https://wa.me{YOUR_WHATSAPP}?text={whatsapp_msg.replace(' ', '%20')}"
+            st.link_button("📲 Send Screenshot on WhatsApp", wa_link)
+
+st.markdown("---")
+
+# 3. Main Tool & Language Selector
 c1, c2 = st.columns(2)
 with c1:
     tool_choice = st.selectbox(
-        "🛠️ Select AI Tool (Yahan se Tool Chunein):",
+        "🛠️ Select AI Tool:",
         [
             "🛡️ Scam & Fraud Detector",
             "🖼️ AI Image Vision & Analyzer",
@@ -149,9 +201,7 @@ with c2:
         ["English (Global)", "Roman Urdu + English"],
     )
 
-st.markdown("---")
 st.subheader(f"{tool_choice}")
-
 lang_instruction = (
     "Respond strictly in clear English."
     if lang == "English (Global)"
@@ -161,11 +211,11 @@ is_vip_tool = "VIP:" in tool_choice
 
 if is_vip_tool and not st.session_state.is_vip:
     st.warning(
-        f"🔒 Ye VIP Tool hai! Apna Email ({st.session_state.user_email}) WhatsApp **{YOUR_WHATSAPP}** par bhej kar apna personal VIP code hasil karein."
+        "🔒 Ye **VIP Tool** hai! Upar diye gaye **Payment Wallets** par payment karke apna VIP code hasil karein aur box mein daal kar unlock karein."
     )
 elif not st.session_state.is_vip and st.session_state.usage_count >= 3:
     st.error(
-        f"⏳ Aapke 3 free trials khatam ho gaye hain! Unlimited access ke liye WhatsApp **{YOUR_WHATSAPP}** par rabta karein."
+        "⏳ Aapke 3 free trials mukammal ho gaye hain! Upar **Payment Wallets** ke zariye VIP code hasil karein."
     )
 else:
     if tool_choice == "🖼️ AI Image Vision & Analyzer":
@@ -228,34 +278,3 @@ else:
                 with st.spinner("Reading PDF..."):
                     reader = PdfReader(uploaded_pdf)
                     text = "".join(
-                        [p.extract_text() or "" for p in reader.pages[:10]]
-                    )
-                    q = pdf_q if pdf_q.strip() else "Summarize this document."
-                    res, eng = get_ai_response(
-                        f"{q} {lang_instruction}\n\n{text[:15000]}"
-                    )
-                    if res:
-                        st.markdown(res)
-                        st.download_button(
-                            "📥 Download", res, "PDF_Summary.txt"
-                        )
-
-    else:
-        user_input = st.text_area("Enter text or topic:", height=150)
-        prompts = {
-            "🛡️ Scam & Fraud Detector": f"Check if SAFE or SCAM and explain why. {lang_instruction} Message: {user_input}",
-            "📄 CV & Cover Letter Maker": f"Write a CV Summary and Cover Letter. {lang_instruction} Details: {user_input}",
-            "✍️ Email & Application Writer": f"Write a formal email or application. {lang_instruction} Purpose: {user_input}",
-            "🎓 Study & Concept Tutor": f"Explain this topic simply. {lang_instruction} Topic: {user_input}",
-        }
-        if st.button("Generate ✨"):
-            if not user_input.strip():
-                st.warning("Enter text first!")
-            else:
-                with st.spinner("Generating..."):
-                    res, eng = get_ai_response(prompts[tool_choice])
-                    if res:
-                        if not st.session_state.is_vip:
-                            st.session_state.usage_count += 1
-                        st.markdown(res)
-                        st.download_button("📥 Download", res, "Result.txt")

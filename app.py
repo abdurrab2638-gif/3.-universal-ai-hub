@@ -18,17 +18,16 @@ st.markdown(
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-# APNI DETAILS YAHAN LIKHEIN
 WA_NO = "923401504999"
 TITLE = "ABDUR RAB"
 EP_NO = "0340-1504999"
 JC_NO = "0340-1504999"
-BANK = "2697-0115726042"
+BANK = "2697-0115726042 (Meezan Bank)"
 PRICE = "Rs. 300/Month"
 
 VIP_USERS = {
-    "abdurrab2638@gmail.om": "ADMIN2026",
-    "@gmail.com": "VIP101",
+    "admin@gmail.com": "ADMIN2026",
+    "ali@gmail.com": "VIP101",
 }
 
 for k, v in [("email", ""), ("count", 0), ("vip", False)]:
@@ -51,7 +50,6 @@ def ask_ai(prompt, img=None):
 def build_pro_video(
     lines, user_images, aspect_ratio, quality, add_voice, lang_code
 ):
-    # Video Size & Quality Setup
     if "TikTok" in aspect_ratio:
         w, h = (
             (1080, 1920)
@@ -76,7 +74,6 @@ def build_pro_video(
         full_script += txt_str + ". "
         dur = 4
 
-        # Agar user ne images upload ki hain toh unhein background mein lagayein
         if user_images and len(user_images) > 0:
             pil_im = Image.open(user_images[i % len(user_images)]).convert(
                 "RGB"
@@ -109,7 +106,6 @@ def build_pro_video(
 
     final_vid = CompositeVideoClip(clips)
 
-    # AI Voice-Over Add Karna
     audio_path = None
     if add_voice and full_script.strip():
         try:
@@ -250,7 +246,6 @@ else:
                 with st.spinner(
                     "AI Video, Voice-Over, Title aur Description tayyar kar raha hai..."
                 ):
-                    # Step A: Pehle Google Veo Model Try Karein (Agar API key par Veo enabled ho)
                     veo_done = False
                     try:
                         op = client.models.generate_videos(
@@ -285,19 +280,12 @@ else:
                     except Exception:
                         veo_done = False
 
-                    # Step B: Script + Title + Description + Tags Generate Karein
-                    seo_prompt = f"""
-                    Create a video package for topic: {v_topic}. {l_inst}
-                    Format strictly like this:
-                    SCRIPT:
+                    seo_prompt = (
+                        f"Create a video package for topic: {v_topic}. {l_inst} "
+                        "Format strictly like this: "
+                        "SCRIPT: (Write 5 short lines, max 10 words each, one per line, no numbers) "
+                        "SEO: (Write Viral Title, YouTube/TikTok Description, and 10 Hashtags)"
+                    )
                     res = ask_ai(seo_prompt)
-if res:
-uin = st.text_area("Enter text:", height=130)
-if st.button("Generate ✨") and uin.strip():
-with st.spinner("Generating..."):
-p = f"Task: {tool}. {l_inst} Input: {uin}"
-res = ask_ai(p)
-if res:
-st.session_state.count += 1
-st.markdown(res)
-st.download_button("📥 Download", res, "Result.txt")
+                    if res:
+                        parts = res.split("SEO:")

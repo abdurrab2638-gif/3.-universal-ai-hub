@@ -26,11 +26,11 @@ client = genai.Client(api_key=API_KEY)
 # ==========================================
 # APNI PAYMENT & WHATSAPP DETAILS YAHAN LIKHEIN
 # ==========================================
-YOUR_WHATSAPP = "923000000000"  # Bina '+' ke likhein (e.g., 923001234567)
-ACCOUNT_TITLE = "Muhammad Ali"  # Apna Account Title likhein
-EASYPAISA_NO = "0300-0000000"
-JAZZCASH_NO = "0300-0000000"
-MEEZAN_BANK = "0101-0101234567 (Meezan Bank)"
+YOUR_WHATSAPP = "923401504999"  # Bina '+' ke likhein (e.g., 923001234567)
+ACCOUNT_TITLE = "ABDUR RAB"  # Apna Account Title likhein
+EASYPAISA_NO = "0340-1504999"
+JAZZCASH_NO = "0340-1504999"
+MEEZAN_BANK = "2697-0115726042 (Meezan Bank)"
 VIP_PRICE = "Rs. 300 / Month"
 
 # Har VIP Customer ka Email aur uska Personal Code
@@ -169,10 +169,10 @@ if not st.session_state.is_vip:
         with v_col2:
             st.subheader(f"💳 Payment Wallets ({VIP_PRICE})")
             st.markdown(f"""
-            **Account Title:** `{ABDUR RAB}`  
-            🟢 **EasyPaisa:** `{03401504999}`  
-            🔴 **JazzCash:** `{03401504999}`  
-            🏦 **Meezan Bank:** `{26970115726042}`  
+            **Account Title:** `{ACCOUNT_TITLE}`  
+            🟢 **EasyPaisa:** `{EASYPAISA_NO}`  
+            🔴 **JazzCash:** `{JAZZCASH_NO}`  
+            🏦 **Meezan Bank:** `{MEEZAN_BANK}`  
             """)
             whatsapp_msg = f"Assalam-o-Alaikum! Maine {VIP_PRICE} payment kar di hai. Mera Email: {st.session_state.user_email} hai, please mujhe VIP Code de dein."
             wa_link = f"https://wa.me{YOUR_WHATSAPP}?text={whatsapp_msg.replace(' ', '%20')}"
